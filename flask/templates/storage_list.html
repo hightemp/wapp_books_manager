@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<form action="">
+<div>
+    <div class="table-pagination">
+        <ul class="pagination">
+            <li class="page-item">
+                <a class="page-link" href="/books/{{context.page_first}}">
+                    <span aria-hidden="true">Первая</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="/books/{{context.page_prev}}">
+                    <span aria-hidden="true">Предыдущая</span>
+                </a>
+            </li>
+            <li class="page-item page-number">
+                <input type="text" name="page" value="{{context.page}}"/>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="/books/{{context.page_next}}">
+                    <span aria-hidden="true">Следующая</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="/books/{{context.page_last}}">
+                    <span aria-hidden="true">Последняя</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- <div class="actions-panel">
+        </div> -->
+    </div>
+    <div class="table">
+        <div class="table-row">
+            <div class="table-cell table-cell-header">
+                Название
+                <input type="text" class="form-control">
+            </div>
+            <div class="table-cell table-cell-header"></div>
+        </div>
+        {% for file in context.files %}
+        <div 
+            class="table-row"
+        >
+            <div class="table-cell">
+                {{ file.path }}
+            </div>
+            <div class="table-cell">
+                <form action="">
+                <div class="btn-group" role="group">
+                    <input type="hidden" name="name" value="{{ file.path }}"> 
+                    <button name="delete" value="1" type="submit" class="btn btn-light"><i class="bi bi-trash-fill"></i></button>
+                    <button name="edit" value="1"  type="submit" class="btn btn-light"><i class="bi bi-pencil"></i></button>
+                    <button name="add_to_books" value="1" type="submit" class="btn btn-light" title="Добавить в библиотеку"><i class="bi bi-box-arrow-in-up"></i></button>
+                </div>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+</form>
+
+<style>
+.table-row {
+    grid-template-columns: 1fr 160px;
+}
+</style>
+{% endblock %}
