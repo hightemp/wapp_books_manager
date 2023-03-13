@@ -4,6 +4,8 @@
 <form method="POST" enctype="multipart/form-data">
     {{ context.form.csrf_token }}
     {{ context.form.name.label }} {{ context.form.name() }}<br>
+    {{ context.form.description.label }} {{ context.form.description() }}<br>
+    {{ context.form.file.label }} {{ context.form.file() }}<br>
     {{ context.form.submit() }}
 </form>
 {% endblock %}

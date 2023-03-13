@@ -9,7 +9,12 @@ from sqlalchemy_utils import database_exists,create_database
 # from jinja2.filters import context
 from flask_paginate import Pagination, get_page_args
 from flask_table import Table, Col
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField
+from wtforms.validators import DataRequired
+import shutil
 
+import os
 from faker import Faker
 
 SQLALCHEMY_DATABASE_URI='sqlite:///./database.db'
@@ -51,6 +56,15 @@ def create_app(test_config=None):
         @staticmethod
         def get_all():
             return Book.query.all()
+
+        def to_dict(self):
+            return {
+                'id': self.id,
+                'name': self.name,
+                'description': self.description,
+                'file': self.file,
+                'preview': self.preview,
+            }
     
     class TableBooks(Table):
         classes = ['table']
@@ -75,6 +89,10 @@ def create_app(test_config=None):
         pagination = Pagination(page=page, per_page=per_page, total=len(data), css_framework='bootstrap4')
         return data, pagination
     
+    UPLOADS_PATH = "./static/uploads/files"
+    UPLOADS_BOOKS_PATH = "./static/uploads/books"
+    UPLOADS_PREVIEW_PATH = "./static/uploads/preview"
+
     @pass_context
     @app.template_filter('active_url_cls')
     def active_url_cls(context, cls, path):
@@ -91,10 +109,10 @@ def create_app(test_config=None):
     def books_generate():
         for i in range(100):
             record = Book(
-                name=fake.name(),
-                description=fake.paragraph(nb_sentences=1),
-                file=fake.file_name(extension='pdf'),
-                preview=fake.file_name(extension='png'),
+                preview="",
+                name=fake.paragraph(nb_sentences=1),
+                description=fake.paragraph(nb_sentences=2),
+                file="book2.pdf",
             )
             db.session.add(record)
         db.session.commit()
@@ -106,38 +124,186 @@ def create_app(test_config=None):
         db.session.commit()
         return "OK"
 
-    @app.route("/books", defaults={"page": 1})
-    @app.route("/books/<int:page>")
-    def books(page):
-        context = {}
-        context['books'] = []
-        # search=False
-        page, per_page, offset = get_page_args()
+    @app.route('/api/books')
+    def api_books():
+        query = Book.query
 
-        per_page = 10
-        # books = Book.query.all()
-        # books = Book.query.paginate(page, 10, True)
-        books = Book.query.limit(per_page).offset(offset)
-        total = Book.query.count()
-        pagination = Pagination(
-            page=page, 
-            per_page=per_page, 
-            total = total,        
-            format_total=True,  
-            format_number=True,  
-            record_name='books',
-            # search=search, 
-            css_framework='bootstrap4'
-        )
-        table = TableBooks(books, no_items='')
-        context['table']=table
-        context['pagination']=pagination
+        # search filter
+        search = request.args.get('search')
+        if search:
+            query = query.filter(db.or_(
+                Book.name.like(f'%{search}%'),
+                Book.description.like(f'%{search}%')
+            ))
+        total = query.count()
+
+        # sorting
+        sort = request.args.get('sort')
+        if sort:
+            order = []
+            for s in sort.split(','):
+                direction = s[0]
+                name = s[1:]
+                if name not in ['name', 'description', 'file', 'preview']:
+                    name = 'name'
+                col = getattr(Book, name)
+                if direction == '-':
+                    col = col.desc()
+                order.append(col)
+            if order:
+                query = query.order_by(*order)
+
+        # pagination
+        start = request.args.get('start', type=int, default=-1)
+        length = request.args.get('length', type=int, default=-1)
+        if start != -1 and length != -1:
+            query = query.offset(start).limit(length)
+
+        # response
+        return {
+            'data': [i.to_dict() for i in query],
+            'total': total,
+        }
+
+    @app.route("/books", endpoint="books")
+    def books():
+        context = {}
         return render_template('books_list.html', context=context)
+
+    @app.route("/books/<id>/show", endpoint="books_show")
+    def books_show(id):
+        context = {
+            'book': Book.query.get(id)
+        }
+        return render_template('books_show.html', context=context)
+
+    class BookForm(FlaskForm):
+        name = StringField('Name', validators=[DataRequired()], render_kw={"class": "form-control"})
+        description = StringField('Description', validators=[], render_kw={"class": "form-control"})
+        file = StringField('File', validators=[], render_kw={"class": "form-control"})
+        submit = SubmitField('Сохранить', render_kw={"class": "btn btn-primary"})
+
+    @app.route("/books/<id>/edit", methods=['GET', 'POST'], endpoint="books_edit")
+    def books_edit(id):
+        book = Book.query.get(id)
+        form = BookForm(obj=book)
+
+        context = {
+            'book': book,
+            'form': form
+        }
+
+        if form.validate_on_submit():
+            form.populate_obj(book) # update user object with submitted form data
+            db.session.commit() # save changes to database
+            return redirect(url_for('books'))
+        return render_template('books_edit.html', context=context)
+
+    @app.route("/books/<id>/delete", endpoint="books_delete")
+    def books_delete(id):
+        book = Book.query.get(id)
+        db.session.delete(book)
+        db.session.commit()
+        return redirect(url_for('books'))
+    
+    @app.route("/books/<id>/preview", endpoint="books_preview")
+    def books_preview(id):
+        book = Book.query.get(id)
+        if not book.preview:
+            from preview_generator.manager import PreviewManager
+
+            # os.path.join(os.getcwd(), 
+            cache_path = UPLOADS_PREVIEW_PATH+'/'
+            pdf_or_odt_to_preview_path = UPLOADS_BOOKS_PATH+'/'+book.file
+
+            manager = PreviewManager(cache_path, create_folder= True)
+            path_to_preview_image = manager.get_jpeg_preview(pdf_or_odt_to_preview_path, page=1)
+            # pdftocairo -png -singlefile -scale-to 256 -f 2 -l 2 ./static/uploads/preview/book2.pdf /tmp/preview-generator-mchjl276
+            book.preview = os.path.basename(path_to_preview_image)
+            # book.update({'preview': os.path.basename(path_to_preview_image) })
+            db.session.commit()
+        return redirect("/"+UPLOADS_PREVIEW_PATH+'/'+book.preview)
+
+    def fn_list_files():
+        p = UPLOADS_PATH
+        files = [f for f in os.listdir(p) if os.path.isfile(os.path.join(p, f)) and not f.startswith(".")]
+        files = [{ 'id': i, 'name': f } for i, f in enumerate(files)]
+        return files
+
+    @app.route('/api/storage')
+    def api_storage():
+        files = fn_list_files()
+        return {
+            'data': files,
+            'total': len(files),
+        }
+
+    class StorageForm(FlaskForm):
+        name = StringField('Name', validators=[DataRequired()], render_kw={"class": "form-control"})
+        submit = SubmitField('Сохранить', render_kw={"class": "btn btn-primary"})
 
     @app.route('/storage')
     def storage():
         context = {}
-        context['files'] = []
         return render_template('storage_list.html', context=context)
+
+    @app.route("/storage/<id>/show", endpoint="storage_show")
+    def books_show(id):
+        files = fn_list_files()
+        files = list(filter(lambda x: str(x['id'])==id, files))
+        if (not files[0]): return ""
+        file = files[0]
+
+        context = {
+            'file': file
+        }
+        return render_template('storage_show.html', context=context)
+    
+    @app.route("/storage/<id>/edit", methods=['GET', 'POST'], endpoint="storage_edit")
+    def storage_edit(id):
+        files = fn_list_files()
+        files = list(filter(lambda x: str(x['id'])==id, files))
+        if (not files[0]): return ""
+        file = files[0]
+        form = StorageForm(name=file['name'])
+
+        context = {
+            'book': file,
+            'form': form
+        }
+
+        if form.validate_on_submit():
+            from_name=UPLOADS_PATH+"/"+file['name']
+            to_name=UPLOADS_PATH+"/"+form.name.data
+            os.rename(from_name, to_name)
+            return redirect(url_for('storage'))
+        return render_template('storage_edit.html', context=context)
+
+    @app.route("/storage/<id>/delete", endpoint="storage_delete")
+    def storage_delete(id):
+        files = fn_list_files()
+        files = list(filter(lambda x: str(x['id'])==id, files))
+        file = files[0]
+        os.unlink(UPLOADS_PATH+"/"+file['name'])
+        return redirect(url_for('storage'))
+
+    @app.route("/storage/<id>/upload", endpoint="storage_upload")
+    def storage_upload(id):
+        files = fn_list_files()
+        files = list(filter(lambda x: str(x['id'])==id, files))
+        file = files[0]
+        from_file=UPLOADS_PATH+"/"+file['name']
+        to_file=UPLOADS_BOOKS_PATH+"/"+file['name']
+
+        shutil.copyfile(from_file, to_file)
+        book=Book(
+            name=file['name'],
+            description="",
+            file=file['name'],
+            preview=""
+        )
+
+        db.session.add(book)
+        db.session.commit()
 
     return app

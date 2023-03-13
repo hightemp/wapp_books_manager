@@ -1,0 +1,8 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<iframe 
+    src="/static/pdfjs/viewer.html?url=/static/uploads/books/{{ context.book.file }}"
+    style="width:calc(100% - 10px);height:calc(100% - 10px);border:none"
+></iframe>
+{% endblock %}

@@ -3057,7 +3057,7 @@ const defaultOptions = {
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE
   },
   imageResourcesPath: {
-    value: "/pdfjs/images/",
+    value: "/static/pdfjs/images/",
     kind: OptionKind.VIEWER
   },
   maxCanvasPixels: {
@@ -3117,7 +3117,7 @@ const defaultOptions = {
     kind: OptionKind.API
   },
   cMapUrl: {
-    value: "/pdfjs/cmaps/",
+    value: "/static/pdfjs/cmaps/",
     kind: OptionKind.API
   },
   disableAutoFetch: {
@@ -3165,7 +3165,7 @@ const defaultOptions = {
     kind: OptionKind.API
   },
   standardFontDataUrl: {
-    value: "/pdfjs/standard_fonts/",
+    value: "/static/pdfjs/standard_fonts/",
     kind: OptionKind.API
   },
   verbosity: {
@@ -3177,7 +3177,7 @@ const defaultOptions = {
     kind: OptionKind.WORKER
   },
   workerSrc: {
-    value: "/pdfjs/pdf.worker.js",
+    value: "/static/pdfjs/pdf.worker.js",
     kind: OptionKind.WORKER
   }
 };
