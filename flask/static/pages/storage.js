@@ -11,7 +11,12 @@ const updateUrl = (prev, query) => {
         },
         {
             id: 'name',
-            name: 'Name'
+            name: 'Name',
+            formatter: (_, row) => gridjs.html(`
+                <a href='/storage/${row.cells[0].data}/show'>
+                    ${row.cells[1].data}
+                </a>
+            `)
         },
         {
             name: 'Buttons',

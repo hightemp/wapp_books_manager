@@ -3,9 +3,6 @@ const updateUrl = (prev, query) => {
 };
 
 (new gridjs.Grid({
-    pagination: {
-        limit: 6
-    },
     columns: [
         { 
             id: 'id',
@@ -72,6 +69,7 @@ const updateUrl = (prev, query) => {
     },
     pagination: {
         enabled: true,
+        limit: 6,
         server: {
             url: (prev, page, limit) => {
                 return updateUrl(prev, {
