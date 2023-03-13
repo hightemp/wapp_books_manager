@@ -1,0 +1,10 @@
+Faker==17.6.0
+flask_paginate==2022.1.8
+flask_sqlalchemy==3.0.3
+Flask_Table==0.5.0
+Flask_WTF==1.0.1
+Jinja2==3.0.1
+preview_generator==0.29
+SQLAlchemy==1.4.46
+SQLAlchemy_Utils==0.39.0
+WTForms==3.0.1
