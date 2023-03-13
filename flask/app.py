@@ -217,10 +217,12 @@ def create_app(test_config=None):
             pdf_or_odt_to_preview_path = UPLOADS_BOOKS_PATH+'/'+book.file
 
             manager = PreviewManager(cache_path, create_folder= True)
-            path_to_preview_image = manager.get_jpeg_preview(pdf_or_odt_to_preview_path, page=1)
-            # pdftocairo -png -singlefile -scale-to 256 -f 2 -l 2 ./static/uploads/preview/book2.pdf /tmp/preview-generator-mchjl276
+            path_to_preview_image = manager.get_jpeg_preview(
+                pdf_or_odt_to_preview_path, 
+                page=1,
+                width=512
+            )
             book.preview = os.path.basename(path_to_preview_image)
-            # book.update({'preview': os.path.basename(path_to_preview_image) })
             db.session.commit()
         return redirect("/"+UPLOADS_PREVIEW_PATH+'/'+book.preview)
 
@@ -305,5 +307,6 @@ def create_app(test_config=None):
 
         db.session.add(book)
         db.session.commit()
+        return redirect(url_for('storage'))
 
     return app
