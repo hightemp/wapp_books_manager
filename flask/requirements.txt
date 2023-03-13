@@ -2,7 +2,7 @@ Faker==17.6.0
 flask-paginate==2022.1.8
 Flask-SQLAlchemy==3.0.3
 Flask-Table==0.5.0
-Flask_WTF==1.0.1
+Flask-WTF==1.0.1
 Jinja2==3.0.1
 SQLAlchemy==1.4.46
 sqlalchemy-utils==0.39.0
