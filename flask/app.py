@@ -13,6 +13,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
 import shutil
+from flask_caching import Cache
 
 import os
 from faker import Faker
@@ -36,6 +37,8 @@ def create_app(test_config=None):
         SECRET_KEY='dev',
         SQLALCHEMY_DATABASE_URI=SQLALCHEMY_DATABASE_URI,
     )
+
+    cache = Cache(app)
 
     if test_config is None:
         # load the instance config, if it exists, when not testing
@@ -226,7 +229,8 @@ def create_app(test_config=None):
             db.session.commit()
         return redirect("/"+UPLOADS_PREVIEW_PATH+'/'+book.preview)
 
-    def fn_list_files():
+    @cache.cached(timeout=50, key_prefix='fn_list_files')
+    def fn_list_files() -> list:
         p = UPLOADS_PATH
         files = [f for f in os.listdir(p) if os.path.isfile(os.path.join(p, f)) and not f.startswith(".")]
         files = [{ 'id': i, 'name': f } for i, f in enumerate(files)]
@@ -235,6 +239,9 @@ def create_app(test_config=None):
     @app.route('/api/storage')
     def api_storage():
         files = fn_list_files()
+        start = request.args.get('start', type=int, default=1)
+        length = request.args.get('length', type=int, default=10)
+        files = files[start:start+length]
         return {
             'data': files,
             'total': len(files),
