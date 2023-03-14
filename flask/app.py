@@ -241,9 +241,9 @@ def create_app(test_config=None):
         files = fn_list_files()
         start = request.args.get('start', type=int, default=1)
         length = request.args.get('length', type=int, default=10)
-        files = files[start:start+length]
+        page_files = files[start:start+length]
         return {
-            'data': files,
+            'data': page_files,
             'total': len(files),
         }
 
