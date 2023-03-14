@@ -230,15 +230,18 @@ def create_app(test_config=None):
         return redirect("/"+UPLOADS_PREVIEW_PATH+'/'+book.preview)
 
     @cache.cached(timeout=50, key_prefix='fn_list_files')
-    def fn_list_files() -> list:
+    def fn_list_files(search: str="") -> list:
         p = UPLOADS_PATH
         files = [f for f in os.listdir(p) if os.path.isfile(os.path.join(p, f)) and not f.startswith(".")]
+        if search:
+            files = [f for f in files if search in f]
         files = [{ 'id': i, 'name': f } for i, f in enumerate(files)]
         return files
 
     @app.route('/api/storage')
     def api_storage():
-        files = fn_list_files()
+        search = request.args.get('search', default="")
+        files = fn_list_files(search)
         start = request.args.get('start', type=int, default=1)
         length = request.args.get('length', type=int, default=10)
         page_files = files[start:start+length]
