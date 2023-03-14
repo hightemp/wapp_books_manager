@@ -260,10 +260,10 @@ def create_app(test_config=None):
         context = {}
         return render_template('storage_list.html', context=context)
 
-    @app.route("/storage/<id>/show", endpoint="storage_show")
-    def books_show(id):
+    @app.route("/storage/<name>/show", endpoint="storage_show")
+    def books_show(name):
         files = fn_list_files()
-        files = list(filter(lambda x: str(x['id'])==id, files))
+        files = list(filter(lambda x: str(x['name'])==name, files))
         if (not files[0]): return ""
         file = files[0]
 
@@ -272,10 +272,10 @@ def create_app(test_config=None):
         }
         return render_template('storage_show.html', context=context)
     
-    @app.route("/storage/<id>/edit", methods=['GET', 'POST'], endpoint="storage_edit")
-    def storage_edit(id):
+    @app.route("/storage/<name>/edit", methods=['GET', 'POST'], endpoint="storage_edit")
+    def storage_edit(name):
         files = fn_list_files()
-        files = list(filter(lambda x: str(x['id'])==id, files))
+        files = list(filter(lambda x: str(x['name'])==name, files))
         if (not files[0]): return ""
         file = files[0]
         form = StorageForm(name=file['name'])
@@ -292,18 +292,18 @@ def create_app(test_config=None):
             return redirect(url_for('storage'))
         return render_template('storage_edit.html', context=context)
 
-    @app.route("/storage/<id>/delete", endpoint="storage_delete")
-    def storage_delete(id):
+    @app.route("/storage/<name>/delete", endpoint="storage_delete")
+    def storage_delete(name):
         files = fn_list_files()
-        files = list(filter(lambda x: str(x['id'])==id, files))
+        files = list(filter(lambda x: str(x['name'])==name, files))
         file = files[0]
         os.unlink(UPLOADS_PATH+"/"+file['name'])
         return redirect(url_for('storage'))
 
-    @app.route("/storage/<id>/upload", endpoint="storage_upload")
-    def storage_upload(id):
+    @app.route("/storage/<name>/upload", endpoint="storage_upload")
+    def storage_upload(name):
         files = fn_list_files()
-        files = list(filter(lambda x: str(x['id'])==id, files))
+        files = list(filter(lambda x: str(x['name'])==name, files))
         file = files[0]
         from_file=UPLOADS_PATH+"/"+file['name']
         to_file=UPLOADS_BOOKS_PATH+"/"+file['name']
