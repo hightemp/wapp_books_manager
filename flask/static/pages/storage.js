@@ -13,7 +13,7 @@ const updateUrl = (prev, query) => {
             id: 'name',
             name: 'Name',
             formatter: (_, row) => gridjs.html(`
-                <a href='/storage/${encodeURIComponent(row.cells[0].data)}/show'>
+                <a href='/storage/${encodeURIComponent(row.cells[1].data)}/show'>
                     ${row.cells[1].data}
                 </a>
             `)
@@ -22,9 +22,9 @@ const updateUrl = (prev, query) => {
             name: 'Buttons',
             formatter: (_, row) =>
                 gridjs.html(`
-                    <a href="/storage/${encodeURIComponent(row.cells[0].data)}/edit"><i class="bi bi-pencil"></i></a>
-                    <a href="/storage/${encodeURIComponent(row.cells[0].data)}/delete"><i class="bi bi-trash"></i></a>
-                    <a href="/storage/${encodeURIComponent(row.cells[0].data)}/upload"><i class="bi bi-box-arrow-in-up"></i></a>
+                    <a href="/storage/${encodeURIComponent(row.cells[1].data)}/edit"><i class="bi bi-pencil"></i></a>
+                    <a href="/storage/${encodeURIComponent(row.cells[1].data)}/delete"><i class="bi bi-trash"></i></a>
+                    <a href="/storage/${encodeURIComponent(row.cells[1].data)}/upload"><i class="bi bi-box-arrow-in-up"></i></a>
                 `),
             width: "100px"
         }
