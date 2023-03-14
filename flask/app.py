@@ -235,7 +235,7 @@ def create_app(test_config=None):
         files = [f for f in os.listdir(p) if os.path.isfile(os.path.join(p, f)) and not f.startswith(".")]
         if search:
             files = [f for f in files if search in f]
-        files.sort(key=lambda x: os.path.getmtime(x))
+        files.sort(key=lambda x: os.path.getmtime(os.path.isfile(os.path.join(p, x))))
         files = [{ 'id': i, 'name': f } for i, f in enumerate(files)]
         return files
 
