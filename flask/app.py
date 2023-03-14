@@ -262,10 +262,10 @@ def create_app(test_config=None):
 
     @app.route("/storage/<name>/show", endpoint="storage_show")
     def books_show(name):
-        files = fn_list_files()
-        files = list(filter(lambda x: str(x['name'])==name, files))
-        if (not files[0]): return ""
-        file = files[0]
+        # files = fn_list_files()
+        # files = list(filter(lambda x: str(x['name'])==name, files))
+        # if (not files[0]): return ""
+        file = { 'name': name }
 
         context = {
             'file': file
@@ -274,10 +274,11 @@ def create_app(test_config=None):
     
     @app.route("/storage/<name>/edit", methods=['GET', 'POST'], endpoint="storage_edit")
     def storage_edit(name):
-        files = fn_list_files()
-        files = list(filter(lambda x: str(x['name'])==name, files))
-        if (not files[0]): return ""
-        file = files[0]
+        # files = fn_list_files()
+        # files = list(filter(lambda x: str(x['name'])==name, files))
+        # if (not files[0]): return ""
+        # file = files[0]
+        file = { 'name': name }
         form = StorageForm(name=file['name'])
 
         context = {
@@ -294,17 +295,19 @@ def create_app(test_config=None):
 
     @app.route("/storage/<name>/delete", endpoint="storage_delete")
     def storage_delete(name):
-        files = fn_list_files()
-        files = list(filter(lambda x: str(x['name'])==name, files))
-        file = files[0]
+        # files = fn_list_files()
+        # files = list(filter(lambda x: str(x['name'])==name, files))
+        # file = files[0]
+        file = { 'name': name }
         os.unlink(UPLOADS_PATH+"/"+file['name'])
         return redirect(url_for('storage'))
 
     @app.route("/storage/<name>/upload", endpoint="storage_upload")
     def storage_upload(name):
-        files = fn_list_files()
-        files = list(filter(lambda x: str(x['name'])==name, files))
-        file = files[0]
+        # files = fn_list_files()
+        # files = list(filter(lambda x: str(x['name'])==name, files))
+        # file = files[0]
+        file = { 'name': name }
         from_file=UPLOADS_PATH+"/"+file['name']
         to_file=UPLOADS_BOOKS_PATH+"/"+file['name']
 
